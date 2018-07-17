@@ -1069,8 +1069,9 @@ void Node::CleanCreatedTransaction()
 }
 #endif // IS_LOOKUP_NODE
 
-bool Node::ProcessDoRejoin(const std::vector<unsigned char>& message,
-                           unsigned int offset, const Peer& from)
+bool Node::ProcessDoRejoin(
+    [[gnu::unused]] const std::vector<unsigned char>& message,
+    [[gnu::unused]] unsigned int offset, [[gnu::unused]] const Peer& from)
 {
 #ifndef IS_LOOKUP_NODE
 
