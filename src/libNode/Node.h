@@ -18,7 +18,7 @@
 
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/key_extractors.hpp>
-#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 #include <condition_variable>
 #include <deque>
@@ -50,10 +50,13 @@ class Retriever;
 typedef boost::multi_index::multi_index_container<
     Transaction,
     boost::multi_index::indexed_by<
-        boost::multi_index::sequenced<>,
+        boost::multi_index::ordered_non_unique<
+            boost::multi_index::const_mem_fun<
+                Transaction, const boost::multiprecision::uint256_t&,
+                &Transaction::GetGasPrice>>,
         boost::multi_index::hashed_unique<boost::multi_index::const_mem_fun<
             Transaction, const TxnHash&, &Transaction::GetTranID>>>>
-    seq_ra_txns;
+    gas_ra_txns;
 
 /// Implements PoW submission and sharding node functionality.
 class Node : public Executable, public Broadcastable
@@ -160,7 +163,9 @@ class Node : public Executable, public Broadcastable
 
     // Transactions information
     std::mutex m_mutexCreatedTransactions;
-    seq_ra_txns m_createdTransactions;
+    gas_ra_txns m_createdTransactions;
+
+    list<Transaction> m_leftTxns;
 
     vector<unsigned char> m_txMessage;
 
@@ -376,7 +381,7 @@ class Node : public Executable, public Broadcastable
     bool CheckMicroBlockStateDeltaHash();
     bool CheckMicroBlockShardID();
 
-    void OrderingTxns(std::list<Transaction>& txns);
+    std::list<Transaction> OrderingTxns(const std::list<Transaction>& txns);
     bool VerifyTxnsOrdering(const list<Transaction>& txns);
 
     void ProcessTransactionWhenShardLeader();
